@@ -1,5 +1,19 @@
-# Event Action Agent
 
+# Event Action Agent
+```mermaid
+---
+config:
+  layout: dagre
+---
+flowchart TB
+    cron["Cron Job<br>- runs hourly/weekly"] --> n1["Agent"]
+
+    n1 --> n2["Actions<br>- web search<br>- email send"]
+    n1 --> n3["Capability<br>- if event (e.g. tax policy update) then run email action"]
+
+    class cron,n1 rect;
+
+```
 A Python agent that uses OpenAI's function calling to automatically search the web and provide intelligent responses using Groq's API with the gpt-oss-20b model.
 
 ## Quick Setup
