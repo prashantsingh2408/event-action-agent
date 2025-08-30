@@ -1,185 +1,139 @@
 
 # Event Action Agent
-```mermaid
----
-config:
-  layout: dagre
----
-flowchart TB
-    cron["Cron Job<br>- runs hourly/weekly"] --> n1["Agent"]
 
-    n1 --> n2["Actions<br>- web search<br>- email send"]
-    n1 --> n3["Capability<br>- if event (e.g. tax policy update) then run email action"]
+A clean, modular LangChain-based AI agent with web search capabilities using Hugging Face models.
 
-    class cron,n1 rect;
+## 🏗️ Architecture
 
-```
-A Python agent that uses OpenAI's function calling to automatically search the web and provide intelligent responses using Groq's API with the gpt-oss-20b model.
-
-## Quick Setup
-
-### 1. Install Dependencies
-
-```bash
-# Create virtual environment
-python -m venv .venv
-
-# Activate virtual environment
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### 2. Set Up API Key
-
-**Option A: Create .env File**
-```bash
-echo "GROQ_API_KEY=your_groq_api_key_here" > .env
-```
-
-**Option B: System Environment**
-```bash
-export GROQ_API_KEY=your_groq_api_key_here
-```
-
-**Option C: Direct in Terminal**
-```bash
-GROQ_API_KEY=your_key_here python main.py
-```
-
-### 3. Get Your Groq API Key
-
-1. Visit: https://console.groq.com/
-2. Sign up for a free account
-3. Generate your API key
-
-## Usage
-
-### Interactive Mode (with menu)
-```bash
-python main.py
-```
-Shows a menu with 5 pre-configured search examples to choose from.
-
-### Direct Search
-```bash
-python main.py "new tax policies in India 2025"
-python main.py "latest legal updates in India"
-python main.py "GST rules changes 2025"
-python main.py "OpenAI Open Model Hackathon 2025"
-```
-
-## Built-in Search Examples
-
-The agent comes with pre-configured search examples:
-
-1. **new tax policies in India 2025** - Latest tax law changes and reforms
-2. **latest legal updates in India** - Recent legal developments and court decisions
-3. **OpenAI Open Model Hackathon 2025 deadline prizes** - Tech events and competitions
-4. **new GST rules in India** - GST policy updates and compliance changes
-5. **income tax changes 2025 India** - Income tax reforms and new regulations
-
-## Example Output
-
-### Tax Policy Search Results
-
-The agent successfully found and analyzed **New Income-Tax Law (India 2025)**:
-
-**Key Changes:**
-- Complete rewrite of 1961 Act
-- 22% corporate tax rate option for new manufacturing units
-- Simplified filing process with fewer sections
-
-**Important Dates:**
-- Presidential assent: August 2025
-- Effective date: April 1, 2026
-- Filing deadlines: October 15-31, 2025
-
-**Impact on Businesses:**
-- New 22% concessional tax rate with deduction restrictions
-- Updated cryptocurrency and digital transaction rules
-- Simplified compliance with unified digital platform
-
-**Requirements:**
-- Digital Tax ID (DT-ID) required
-- New compliance portal for electronic filing
-- Lowered audit threshold from ₹1Cr to ₹90Lac
-
-## How It Works
-
-1. **🤖 AI Analysis**: The AI model analyzes your query
-2. **🔍 Function Calling**: Automatically decides to search the web if needed
-3. **📡 Web Search**: Performs real-time DuckDuckGo search
-4. **📊 Analysis**: Processes search results and provides structured summary
-5. **📋 Output**: Delivers comprehensive analysis with key points, dates, and impacts
-
-## Project Structure
+The application is organized into modular components:
 
 ```
 event-action-agent/
-├── main.py              # Main agent with function calling and flexible search
-├── requirements.txt     # Python dependencies
-├── .env                 # API key storage (optional)
-├── README.md           # This file
-└── .venv/              # Virtual environment (created during setup)
+├── main.py          # Main entry point
+├── config.py        # Configuration management
+├── tools.py         # Web search tools and utilities
+├── agent.py         # LangChain agent management
+├── cli.py           # Command-line interface
+├── prompts.py       # System prompt for the agent
+├── requirements.txt # Dependencies
+└── README.md        # This file
 ```
 
-## Dependencies
+## 🚀 Features
 
-- `openai>=1.102.0` - OpenAI API client
-- `ollama>=0.3.0` - Local Ollama model support
-- `ddgs>=8.1.0` - DuckDuckGo search integration
-- `python-dotenv>=1.0.0` - Environment variable management
+- **Clean Modular Design**: Simple separation of concerns with dedicated modules
+- **Web Search**: Real-time web search using DuckDuckGo
+- **Hugging Face Integration**: Uses Hugging Face models via their API
+- **Intelligent Agent**: Automatically decides when to search the web
+- **Comprehensive Analysis**: Provides detailed summaries with key points and impacts
+- **Simple CLI**: User-friendly command-line interface with examples
 
-## Use Cases
+## 📦 Installation
 
-### For Legal Professionals
-- Stay updated on law changes and court decisions
-- Monitor regulatory updates and compliance requirements
-- Research current legal precedents and rulings
-
-### For Business Owners
-- Track tax policy changes and their impact
-- Monitor regulatory updates affecting operations
-- Stay informed about compliance deadlines
-
-### For Tax Consultants
-- Get current information on tax reforms
-- Monitor policy changes and effective dates
-- Research new compliance requirements
-
-### For Researchers
-- Get current information on any topic
-- Monitor industry developments and trends
-- Research policy changes and their implications
-
-## Troubleshooting
-
-### API Key Issues
+1. Clone the repository:
 ```bash
-❌ Error: GROQ_API_KEY environment variable not found!
+git clone https://github.com/yourusername/event-action-agent.git
+cd event-action-agent
 ```
-**Solution**: Set the environment variable using one of the methods above.
 
-### Import Errors
+2. Install dependencies:
 ```bash
-ModuleNotFoundError: No module named 'openai'
-```
-**Solution**: Activate virtual environment and install dependencies:
-```bash
-source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## References
+3. Set up your Hugging Face token:
+```bash
+# Create a .env file
+echo "HF_TOKEN=your_huggingface_token_here" > .env
+```
 
-- [OpenAI Open Model Hackathon](https://openai.devpost.com/)
-- [OpenAI Function Calling Tutorial](https://www.datacamp.com/tutorial/open-ai-function-calling-tutorial)
-- [Groq API Documentation](https://console.groq.com/)
-- [DuckDuckGo Search](https://duckduckgo.com/)
+## 🔧 Configuration
 
-# Links
-- [Syncing doc](https://docs.google.com/document/d/1-inhLvGuyQlD-xN2fdmA3N0cO2A3YLGTs4LhV9_HNeo/edit?usp=sharing)
-- [Tech Doc](https://docs.google.com/document/d/1FpZ2sC_ca5Z3QjQ9dYS4br9D_5czdcmasgeMFf49rLI/edit?usp=sharing)
-- [Architecture diagram](https://www.mermaidchart.com/app/projects/cc5388e1-0eee-4d93-8a82-5b4c6064b61b/diagrams/237d9a95-8bab-41cc-8ca4-ebe099718d17/share/invite/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkb2N1bWVudElEIjoiMjM3ZDlhOTUtOGJhYi00MWNjLThjYTQtZWJlMDk5NzE4ZDE3IiwiYWNjZXNzIjoiRWRpdCIsImlhdCI6MTc1NjM5NDc0Nn0.EQf-J2hvRjHTq9urHSljy9AhDoBCBZaKbZlzMYJP1q0)
+The application uses a centralized configuration system in `config.py`:
+
+- **HF_TOKEN**: Your Hugging Face API token
+- **HF_BASE_URL**: Hugging Face API base URL
+- **HF_MODEL**: Model to use (default: openai/gpt-oss-20b:together)
+- **Agent Settings**: Max iterations, verbosity, etc.
+
+## 🎯 Usage
+
+### Interactive Mode
+```bash
+python main.py
+```
+
+### Direct Query Mode
+```bash
+python main.py "latest AI developments in 2025"
+```
+
+### Check Status
+```bash
+python main.py --status
+```
+
+## 📋 Examples
+
+The application includes example queries you can try:
+1. Latest AI developments in 2025
+2. New tax policies in India 2025
+3. OpenAI Open Model Hackathon 2025 deadline prizes
+4. Latest news about artificial intelligence
+5. Current developments in machine learning
+
+## 🔍 How It Works
+
+1. **Query Processing**: The agent receives your query and analyzes it
+2. **Intelligent Decision**: The agent automatically decides if web search is needed
+3. **Web Search**: If needed, performs real-time web search using DuckDuckGo
+4. **AI Analysis**: Uses Hugging Face models to analyze and provide comprehensive responses
+
+## 🛠️ Module Details
+
+### config.py
+- Centralized configuration management
+- Environment variable handling
+- Configuration validation
+
+### tools.py
+- Web search functionality using DuckDuckGo
+- LangChain tool integration for the agent
+
+### agent.py
+- LangChain agent creation and management using `create_tool_calling_agent`
+- Agent execution handling
+- Integration with prompts module
+
+### cli.py
+- Command-line interface
+- User interaction handling
+- Example management
+- Status display
+
+### prompts.py
+- System prompt for the LangChain agent
+- Instructions for web search and analysis
+
+### main.py
+- Application entry point
+- Clean, simple interface
+
+## 🔧 Development
+
+The modular structure makes it easy to:
+- Add new tools and capabilities
+- Modify configuration settings
+- Extend the CLI interface
+- Add new AI models or providers
+- Implement additional search providers
+- Customize prompts and templates
+
+## 📝 Requirements
+
+- Python 3.8+
+- LangChain
+- LangChain OpenAI
+- LangChain Community
+- DuckDuckGo Search
+- python-dotenv (optional)
