@@ -13,148 +13,77 @@ flowchart TB
     n1 --> n3["Capability<br>- if event (e.g. tax policy update) then run email action"]
 
     class cron,n1 rect;
-
 ```
 
-A clean, modular LangChain-based AI agent with web search capabilities using Hugging Face models.
+A clean, modular LangChain-based AI agent with web search capabilities using Hugging Face models and intelligent notification memory system.
 
-[Tech Doc](https://docs.google.com/document/d/1FpZ2sC_ca5Z3QjQ9dYS4br9D_5czdcmasgeMFf49rLI/edit?usp=sharing)
+## 🚀 Quick Start
 
-[Mermaid Diagram](https://www.mermaidchart.com/app/projects/cc5388e1-0eee-4d93-8a82-5b4c6064b61b/diagrams/237d9a95-8bab-41cc-8ca4-ebe099718d17/share/invite/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkb2N1bWVudElEIjoiMjM3ZDlhOTUtOGJhYi00MWNjLThjYTQtZWJlMDk5NzE4ZDE3IiwiYWNjZXNzIjoiRWRpdCIsImlhdCI6MTc1NjU1MTI5NH0.hqDDEMDMo0YEyJU9JB-Ob8SxQSm1d4_L-obNqsbhSwA)
-
-[Sync Doc of LegalCopilot app](https://docs.google.com/document/d/1-inhLvGuyQlD-xN2fdmA3N0cO2A3YLGTs4LhV9_HNeo/edit?usp=sharing)
-
-## 🏗️ Architecture
-
-The application is organized into modular components:
-
-```
-event-action-agent/
-├── main.py          # Main entry point
-├── config.py        # Configuration management
-├── tools.py         # Web search tools and utilities
-├── agent.py         # LangChain agent management
-├── cli.py           # Command-line interface
-├── prompts.py       # System prompt for the agent
-├── requirements.txt # Dependencies
-└── README.md        # This file
-```
-
-## 🚀 Features
-
-- **Clean Modular Design**: Simple separation of concerns with dedicated modules
-- **Web Search**: Real-time web search using DuckDuckGo
-- **Hugging Face Integration**: Uses Hugging Face models via their API
-- **Intelligent Agent**: Automatically decides when to search the web
-- **Comprehensive Analysis**: Provides detailed summaries with key points and impacts
-- **Simple CLI**: User-friendly command-line interface with examples
-
-## 📦 Installation
-
-1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/event-action-agent.git
-cd event-action-agent
-```
-
-2. Install dependencies:
-```bash
+# Install dependencies
 pip install -r requirements.txt
-```
 
-3. Set up your Hugging Face token:
-```bash
-# Create a .env file
+# Set up your Hugging Face token
 echo "HF_TOKEN=your_huggingface_token_here" > .env
-```
 
-## 🔧 Configuration
-
-The application uses a centralized configuration system in `config.py`:
-
-- **HF_TOKEN**: Your Hugging Face API token
-- **HF_BASE_URL**: Hugging Face API base URL
-- **HF_MODEL**: Model to use (default: openai/gpt-oss-20b:together)
-- **Agent Settings**: Max iterations, verbosity, etc.
-
-## 🎯 Usage
-
-### Interactive Mode
-```bash
+# Run the agent
 python main.py
 ```
 
-### Direct Query Mode
-```bash
-python main.py "latest AI developments in 2025"
+## 📚 Documentation
+
+- **[Main Documentation](docs/README.md)** - Complete project overview and usage guide
+- **[API Documentation](docs/API_README.md)** - API reference and integration guide
+- **[Memory System](docs/MEMORY_SYSTEM.md)** - Notification memory system documentation
+- **[Sample Events](docs/SAMPLE_EVENTS.md)** - Example events and use cases
+
+## 🏗️ Project Structure
+
+```
+event-action-agent/
+├── 📁 docs/                    # 📚 All documentation
+│   ├── README.md              # Main documentation
+│   ├── API_README.md          # API reference
+│   ├── MEMORY_SYSTEM.md       # Memory system docs
+│   └── SAMPLE_EVENTS.md       # Example events
+├── 📁 src/                     # 🔧 Source code
+│   ├── 📁 agent/              # Agent core package
+│   └── 📁 cli/                # CLI interface
+├── 📁 tests/                   # 🧪 Test suite
+├── 📁 examples/                # 📝 Example scripts
+├── 📁 scripts/                 # 🔨 Utility scripts
+├── 📁 config/                  # ⚙️ Configuration files
+├── main.py                     # 🚀 Main entry point
+└── requirements.txt            # 📦 Dependencies
 ```
 
-### Check Status
+## 🎯 Features
+
+- **🤖 Intelligent Agent**: LangChain-based AI agent with web search
+- **🔍 Web Search**: Real-time search using DuckDuckGo
+- **🧠 Memory System**: Prevents duplicate notifications
+- **📊 Comprehensive Testing**: Full test suite
+- **🔧 Modular Design**: Clean, scalable architecture
+- **📚 Complete Documentation**: Extensive guides and examples
+
+## 🧪 Testing
+
 ```bash
-python main.py --status
+# Run all tests
+python scripts/run_tests.py
+
+# Run specific tests
+python -m pytest tests/
+
+# Check complete system test
+python tests/test_complete_system.py
 ```
 
-## 📋 Examples
+## 🔗 Links
 
-The application includes example queries you can try:
-1. Latest AI developments in 2025
-2. New tax policies in India 2025
-3. OpenAI Open Model Hackathon 2025 deadline prizes
-4. Latest news about artificial intelligence
-5. Current developments in machine learning
+- [Tech Documentation](https://docs.google.com/document/d/1FpZ2sC_ca5Z3QjQ9dYS4br9D_5czdcmasgeMFf49rLI/edit?usp=sharing)
+- [Mermaid Diagram](https://www.mermaidchart.com/app/projects/cc5388e1-0eee-4d93-8a82-5b4c6064b61b/diagrams/237d9a95-8bab-41cc-8ca4-ebe099718d17/share/invite/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkb2N1bWVudElEIjoiMjM3ZDlhOTUtOGJhYi00MWNjLThjYTQtZWJlMDk5NzE4ZDE3IiwiYWNjZXNzIjoiRWRpdCIsImlhdCI6MTc1NjU1MTI5NH0.hqDDEMDMo0YEyJU9JB-Ob8SxQSm1d4_L-obNqsbhSwA)
 
-## 🔍 How It Works
+## 📝 License
 
-1. **Query Processing**: The agent receives your query and analyzes it
-2. **Intelligent Decision**: The agent automatically decides if web search is needed
-3. **Web Search**: If needed, performs real-time web search using DuckDuckGo
-4. **AI Analysis**: Uses Hugging Face models to analyze and provide comprehensive responses
-
-## 🛠️ Module Details
-
-### config.py
-- Centralized configuration management
-- Environment variable handling
-- Configuration validation
-
-### tools.py
-- Web search functionality using DuckDuckGo
-- LangChain tool integration for the agent
-
-### agent.py
-- LangChain agent creation and management using `create_tool_calling_agent`
-- Agent execution handling
-- Integration with prompts module
-
-### cli.py
-- Command-line interface
-- User interaction handling
-- Example management
-- Status display
-
-### prompts.py
-- System prompt for the LangChain agent
-- Instructions for web search and analysis
-
-### main.py
-- Application entry point
-- Clean, simple interface
-
-## 🔧 Development
-
-The modular structure makes it easy to:
-- Add new tools and capabilities
-- Modify configuration settings
-- Extend the CLI interface
-- Add new AI models or providers
-- Implement additional search providers
-- Customize prompts and templates
-
-## 📝 Requirements
-
-- Python 3.8+
-- LangChain
-- LangChain OpenAI
-- LangChain Community
-- DuckDuckGo Search
-- python-dotenv (optional)
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

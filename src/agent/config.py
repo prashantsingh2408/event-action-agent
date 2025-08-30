@@ -21,7 +21,7 @@ class Config:
     DEFAULT_MAX_RESULTS: int = 5
     
     # Agent Configuration
-    MAX_ITERATIONS: int = 3
+    MAX_ITERATIONS: int = 20
     VERBOSE: bool = True
     
     @classmethod

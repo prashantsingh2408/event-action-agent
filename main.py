@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 """
-Event Action Agent - A modular LangChain-based AI agent with web search capabilities.
+Event Action Agent - Main Entry Point
 
-This application provides an AI agent that can search the web for current information
-and provide comprehensive analysis using Hugging Face models.
-
-Usage:
-    python main.py                    # Interactive mode with examples
-    python main.py "your query"       # Direct query mode
-    python main.py --status           # Show configuration status
-    python main.py -s                 # Show configuration status (short)
+A clean, modular LangChain-based AI agent with web search capabilities 
+using Hugging Face models and intelligent notification memory system.
 """
 
-from cli import CLI
+import sys
+import os
+
+# Add src directory to Python path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+
+from src.cli import CLI
 
 
 def main():
-    """Main entry point for the application."""
+    """Main application entry point."""
     cli = CLI()
     cli.run()
 
