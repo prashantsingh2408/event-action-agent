@@ -8,8 +8,8 @@ This example shows how to use the agent programmatically.
 import sys
 import os
 
-# Add src directory to Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+# Add project root to Python path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.agent import LangChainAgent, search_web, checkIsMailneedtoSend, notification_memory
 
@@ -36,8 +36,9 @@ def basic_agent_usage():
     
     # Example 3: Email notification check
     print("\n3. Email Notification Check:")
+    import json
     event_data = {"topic": "budget announcement"}
-    email_result = checkIsMailneedtoSend.invoke({"event_data": str(event_data)})
+    email_result = checkIsMailneedtoSend.invoke({"event_data": json.dumps(event_data)})
     print(f"Email check result: {email_result[:200]}...")
     
     # Example 4: Memory system
