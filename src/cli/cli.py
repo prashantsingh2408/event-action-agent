@@ -106,6 +106,17 @@ class CLI:
                 print(f"      Recipient: {notif['recipient']}")
                 print(f"      Updates found: {len(notif['notification_data'].get('relevant_updates', []))}")
                 print(f"      Reasoning: {notif['notification_data'].get('reasoning', 'N/A')}")
+                # Show email subject/body preview if present
+                email_content = notif['notification_data'].get('email_content') if isinstance(notif.get('notification_data'), dict) else None
+                if isinstance(email_content, dict):
+                    subject = email_content.get('subject')
+                    body = email_content.get('body')
+                    if subject:
+                        print(f"      Email Subject: {subject}")
+                    if body:
+                        preview = body if len(body) <= 240 else body[:240] + "..."
+                        print("      Email Body Preview:")
+                        print("         " + preview.replace("\n", "\n         "))
                 print()
     
     def run(self):

@@ -6,7 +6,7 @@ from typing import List
 import json
 
 from .config import Config
-from .tools import search_web, checkIsMailneedtoSend
+from .tools import search_web, checkIsMailneedtoSend, create_email_content
 from .prompts import SystemPrompts
 
 
@@ -18,6 +18,8 @@ class LangChainAgent:
         self.config.validate_config()
         self.llm = self._create_llm()
         self.prompt = self._create_prompt()
+        # Expose only tool-callable functions (LangChain @tool decorated)
+        # create_email_content is a helper, not a tool, so we keep tools consistent
         self.tools = [search_web, checkIsMailneedtoSend]
         self.agent = self._create_agent()
         self.executor = self._create_executor()
@@ -98,6 +100,7 @@ class LangChainAgent:
                 email_data = json.loads(email_result)
                 should_send = email_data.get("should_send_email", False)
                 reasoning = email_data.get("reasoning", "No reasoning provided")
+                email_content = email_data.get("email_content") or None
                 
                 if should_send:
                     email_status = "Will send email"
@@ -106,13 +109,31 @@ class LangChainAgent:
             except:
                 email_status = "Email decision unavailable"
                 reasoning = "Could not parse email decision"
+                email_content = None
             
             # Format response
+            # Build response with optional email content section
             response = f"""**Search Results for {topic} updates:**
 {search_result[:500]}...
 
 **📧 Email Decision:** {email_status}
 **Reasoning:** {reasoning}"""
+
+            if email_content and isinstance(email_content, dict):
+                subject = email_content.get("subject", "(no subject)")
+                body = email_content.get("body", "(no body)")
+                # Limit extremely long body display to keep terminal output readable
+                preview_limit = 2000
+                body_preview = body if len(body) <= preview_limit else body[:preview_limit] + "..."
+                response += f"""
+
+**✉️ Email Content:**
+- **Subject:** {subject}
+
+---
+{body_preview}
+---
+"""
             
             return response
             

@@ -3,6 +3,64 @@ from typing import List, Dict, Any
 from langchain.tools import tool
 from ddgs import DDGS
 from .notification_memory import notification_memory
+from datetime import datetime
+
+
+def create_email_content(topic: str, updates: List[Dict], recipient: str = "User") -> Dict[str, str]:
+    """Create email subject and body content for notifications.
+    
+    Args:
+        topic: The topic of the updates
+        updates: List of update dictionaries with title, url, snippet
+        recipient: Name of the email recipient
+        
+    Returns:
+        Dictionary with 'subject' and 'body' keys containing email content
+    """
+    if not updates:
+        return {
+            "subject": f"No new updates found for {topic}",
+            "body": f"Hello {recipient},\n\nNo new updates were found for the topic '{topic}' at this time.\n\nBest regards,\nEvent Action Agent"
+        }
+    
+    subject = f"🔔 {len(updates)} New Update{'s' if len(updates) > 1 else ''} on {topic.title()}"
+    current_date = datetime.now().strftime("%B %d, %Y at %I:%M %p")
+    
+    body_parts: List[str] = [
+        f"Hello {recipient},",
+        "",
+        f"We found {len(updates)} new update{'s' if len(updates) > 1 else ''} on '{topic}' as of {current_date}:",
+        "",
+        "📋 Updates Summary:",
+        ""
+    ]
+    
+    for i, update in enumerate(updates, 1):
+        title = update.get('title', 'No title available')
+        url = update.get('url', 'No URL available')
+        snippet = update.get('snippet', 'No description available')
+        if len(snippet) > 200:
+            snippet = snippet[:200] + "..."
+        body_parts.extend([
+            f"{i}. {title}",
+            f"   Link: {url}",
+            f"   Summary: {snippet}",
+            ""
+        ])
+    
+    body_parts.extend([
+        "---",
+        "",
+        "This is an automated notification from Event Action Agent.",
+        "",
+        "Best regards,",
+        "Event Action Agent"
+    ])
+    
+    return {
+        "subject": subject,
+        "body": "\n".join(body_parts)
+    }
 
 
 @tool
@@ -97,28 +155,39 @@ def checkIsMailneedtoSend(event_data: str) -> str:
         
         # If we found relevant updates, check notification memory
         if relevant_updates:
-            # Create notification data
-            notification_data = {
-                "should_send_email": True,
-                "reasoning": f"Found {len(relevant_updates)} relevant updates for '{topic}'",
-                "topic_searched": topic,
-                "search_query": search_query,
-                "relevant_updates": relevant_updates,
-                "total_search_results": len(search_results),
-                "event_analyzed": event
-            }
+            # Filter out updates that were already sent
+            new_updates, already_sent_updates = notification_memory.filter_new_updates(topic, relevant_updates)
             
-            # Check if this notification was already sent
-            if notification_memory.is_notification_sent(topic, notification_data):
-                should_send = False
-                reasoning = f"Notification already sent for these {len(relevant_updates)} updates on '{topic}'"
-                notification_data["should_send_email"] = False
-                notification_data["reasoning"] = reasoning
-            else:
+            if new_updates:
+                email_content = create_email_content(topic, new_updates)
+                notification_data = {
+                    "should_send_email": True,
+                    "reasoning": f"Found {len(new_updates)} new updates for '{topic}' ({len(already_sent_updates)} already sent)",
+                    "topic_searched": topic,
+                    "search_query": search_query,
+                    "relevant_updates": new_updates,
+                    "already_sent_updates": already_sent_updates,
+                    "total_search_results": len(search_results),
+                    "event_analyzed": event,
+                    "email_content": email_content
+                }
                 should_send = True
-                reasoning = f"Found {len(relevant_updates)} relevant updates for '{topic}' - notification will be sent"
-                # Mark this notification as sent to prevent duplicates
+                reasoning = f"Found {len(new_updates)} new updates for '{topic}' - notification will be sent"
                 notification_memory.mark_notification_sent(topic, notification_data)
+            else:
+                # All updates were already sent previously
+                email_content = create_email_content(topic, already_sent_updates) if already_sent_updates else None
+                notification_data = {
+                    "should_send_email": False,
+                    "reasoning": f"All {len(already_sent_updates)} updates for '{topic}' were already sent previously",
+                    "topic_searched": topic,
+                    "search_query": search_query,
+                    "relevant_updates": [],
+                    "already_sent_updates": already_sent_updates,
+                    "total_search_results": len(search_results),
+                    "event_analyzed": event,
+                    "email_content": email_content
+                }
         else:
             notification_data = {
                 "should_send_email": False,
@@ -126,8 +195,10 @@ def checkIsMailneedtoSend(event_data: str) -> str:
                 "topic_searched": topic,
                 "search_query": search_query,
                 "relevant_updates": relevant_updates,
+                "already_sent_updates": [],
                 "total_search_results": len(search_results),
-                "event_analyzed": event
+                "event_analyzed": event,
+                "email_content": None
             }
         
         return json.dumps(notification_data, ensure_ascii=False, indent=2)

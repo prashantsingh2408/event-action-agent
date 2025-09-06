@@ -51,6 +51,19 @@ class NotificationMemory:
                 )
             ''')
             
+            # Track individual updates that have been sent (prevents partial duplicates)
+            conn.execute('''
+                CREATE TABLE IF NOT EXISTS sent_updates (
+                    update_hash TEXT PRIMARY KEY,
+                    topic TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    url TEXT NOT NULL,
+                    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    recipient TEXT DEFAULT 'default',
+                    full_content TEXT
+                )
+            ''')
+            
             conn.commit()
     
     def _generate_idempotency_key(self, topic: str, notification_data: Dict) -> str:
@@ -106,26 +119,40 @@ class NotificationMemory:
         content_str = json.dumps(stable_content, sort_keys=True)
         return hashlib.sha256(content_str.encode()).hexdigest()
     
-    def is_notification_sent(self, topic: str, notification_data: Dict, time_window_hours: int = 24) -> bool:
-        """Check if a notification has already been sent for this topic within the time window.
-        
-        Args:
-            topic: The topic of the notification
-            notification_data: The notification data
-            time_window_hours: Time window in hours to check for duplicates
-            
-        Returns:
-            True if notification was already sent within time window, False otherwise
-        """
-        # Check if we've sent a notification for this topic recently
+    def _generate_update_hash(self, update: Dict) -> str:
+        """Generate a unique hash for an individual update (title + url)."""
+        title = update.get('title', '').strip()
+        url = update.get('url', '').strip()
+        content_str = f"{title}|{url}"
+        return hashlib.sha256(content_str.encode()).hexdigest()
+    
+    def filter_new_updates(self, topic: str, updates: List[Dict], time_window_hours: int = 24) -> Tuple[List[Dict], List[Dict]]:
+        """Split updates into new vs already sent within the time window."""
+        if not updates:
+            return [], []
+        new_updates: List[Dict] = []
+        already_sent_updates: List[Dict] = []
         with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.execute('''
-                SELECT 1 FROM notification_history 
-                WHERE topic = ? AND sent_at >= datetime('now', '-{} hours')
-                LIMIT 1
-            '''.format(time_window_hours), (topic,))
-            
-            return cursor.fetchone() is not None
+            for update in updates:
+                update_hash = self._generate_update_hash(update)
+                cursor = conn.execute('''
+                    SELECT 1 FROM sent_updates 
+                    WHERE update_hash = ? AND topic = ? AND sent_at >= datetime('now', '-{} hours')
+                    LIMIT 1
+                '''.format(time_window_hours), (update_hash, topic))
+                if cursor.fetchone() is not None:
+                    already_sent_updates.append(update)
+                else:
+                    new_updates.append(update)
+        return new_updates, already_sent_updates
+    
+    def is_notification_sent(self, topic: str, notification_data: Dict, time_window_hours: int = 24) -> bool:
+        """Return True only if all relevant updates were already sent in the window."""
+        relevant_updates = notification_data.get('relevant_updates', [])
+        if not relevant_updates:
+            return False
+        new_updates, _ = self.filter_new_updates(topic, relevant_updates, time_window_hours)
+        return len(new_updates) == 0
     
     def mark_notification_sent(self, topic: str, notification_data: Dict, recipient: str = "default") -> str:
         """Mark a notification as sent.
@@ -155,6 +182,23 @@ class NotificationMemory:
                 (topic, notification_hash, notification_data, recipient)
                 VALUES (?, ?, ?, ?)
             ''', (topic, notification_hash, json.dumps(notification_data), recipient))
+            
+            # Track individual updates (for partial duplicate prevention)
+            relevant_updates = notification_data.get('relevant_updates', [])
+            for update in relevant_updates:
+                update_hash = self._generate_update_hash(update)
+                conn.execute('''
+                    INSERT OR IGNORE INTO sent_updates 
+                    (update_hash, topic, title, url, recipient, full_content)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (
+                    update_hash,
+                    topic,
+                    update.get('title', ''),
+                    update.get('url', ''),
+                    recipient,
+                    json.dumps(update)
+                ))
             
             conn.commit()
         
@@ -188,6 +232,26 @@ class NotificationMemory:
             
             return results
     
+    def get_sent_updates(self, topic: str, days: int = 7) -> List[Dict]:
+        """Get individual sent updates for a topic within a time range."""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute('''
+                SELECT title, url, sent_at, recipient, full_content
+                FROM sent_updates 
+                WHERE topic = ? AND sent_at >= datetime('now', '-{} days')
+                ORDER BY sent_at DESC
+            '''.format(days), (topic,))
+            results: List[Dict] = []
+            for row in cursor.fetchall():
+                results.append({
+                    'title': row[0],
+                    'url': row[1],
+                    'sent_at': row[2],
+                    'recipient': row[3],
+                    'content': json.loads(row[4]) if row[4] else {}
+                })
+            return results
+    
     def get_notification_stats(self) -> Dict:
         """Get statistics about sent notifications.
         
@@ -197,6 +261,11 @@ class NotificationMemory:
         with sqlite3.connect(self.db_path) as conn:
             # Total notifications
             total = conn.execute('SELECT COUNT(*) FROM notification_history').fetchone()[0]
+            # Total individual updates
+            try:
+                total_updates = conn.execute('SELECT COUNT(*) FROM sent_updates').fetchone()[0]
+            except Exception:
+                total_updates = 0
             
             # Notifications by topic
             topics = conn.execute('''
@@ -214,6 +283,7 @@ class NotificationMemory:
             
             return {
                 'total_notifications': total,
+                'total_individual_updates': total_updates,
                 'recent_notifications': recent,
                 'notifications_by_topic': dict(topics)
             }
@@ -229,6 +299,10 @@ class NotificationMemory:
                 DELETE FROM notification_history 
                 WHERE sent_at < datetime('now', '-{} days')
             '''.format(days))
+            conn.execute('''
+                DELETE FROM sent_updates 
+                WHERE sent_at < datetime('now', '-{} days')
+            '''.format(days))
             conn.commit()
     
     def reset_memory(self):
@@ -236,6 +310,10 @@ class NotificationMemory:
         with sqlite3.connect(self.db_path) as conn:
             conn.execute('DELETE FROM sent_notifications')
             conn.execute('DELETE FROM notification_history')
+            try:
+                conn.execute('DELETE FROM sent_updates')
+            except Exception:
+                pass
             conn.commit()
 
 
